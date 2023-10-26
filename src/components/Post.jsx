@@ -1,5 +1,6 @@
 import styles from './Post.module.css';
 import { Comment } from './Comment';
+import { Avatar } from './Avatar';
 
 export function Post() {
     return (
@@ -8,7 +9,8 @@ export function Post() {
     {/* This is the Header area of the Post */}
         <header className={styles.header}>
             <div className={styles.author}>
-                <img className={styles.avatar}src='https://xesque.rocketseat.dev/users/avatar/profile-7ff61704-175b-4ab6-8cc1-1df0bc8619ca.jpg' />
+                {/* Nao preciso definir o valor de hasBorder no Avatar abaixo pois ja defini como default = true nas propriedades deste componente em Avatar.jsx */}
+                <Avatar src='https://xesque.rocketseat.dev/users/avatar/profile-7ff61704-175b-4ab6-8cc1-1df0bc8619ca.jpg'/>
                 <div className={styles.authorInfo}>
                     <strong>Wagner Filgueiras</strong>
                     <span>Web Developer</span>
