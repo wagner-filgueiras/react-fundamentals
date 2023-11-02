@@ -1,8 +1,62 @@
-import styles from './Post.module.css';
+import { format, formatDistanceToNow } from 'date-fns';
+import { enUS } from 'date-fns/locale';
+import { useState } from 'react';
+
 import { Comment } from './Comment';
 import { Avatar } from './Avatar';
 
-export function Post() {
+import styles from './Post.module.css';
+
+export function Post(props) {
+    const [comments, setComments] = useState([
+        'This is my first comment',    
+    ]);
+    // Set the initial state of the new comment text an empty string.
+    const [newCommentText, setNewCommentText] = useState('');
+
+    const publishedDateFormatted = format(props.publishedAt, "MMM, dd yyyy 'at' h:mm a");
+  /*  const publishedDateFormatted = new Intl.DateTimeFormat('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+    }).format(props.publishedAt);
+    */
+    const publishedDateRelativeToNow = formatDistanceToNow(props.publishedAt, {
+        locale: enUS,
+        addSuffix: true,
+    })
+
+
+    // function to create a new comment - add the new comment to the comments array
+    function handleCreateNewComment() {
+        event.preventDefault()
+
+        setComments([...comments, newCommentText]);
+        setNewCommentText('');
+    }
+    // get the value of the new comment text
+    function handleNewCommentChange() {
+        event.target.setCustomValidity('');
+        setNewCommentText(event.target.value);
+    }
+
+    function deleteComment(commentToDelete){
+        // imutabilidade - nao posso alterar o valor de um estado diretamente. As variaveis nao sofrem mutacao
+        // Nunca alteramos uma variavel na memoria de nossa aplicacao
+        // nos criamos um novo valor um novo espaco na memoria
+        const commentsWithoutDeletedOne = comments.filter(comment => {
+            return comment !== commentToDelete});
+
+       setComments(commentsWithoutDeletedOne);
+    }
+
+    function handleNewCommentInvalid() {
+        event.target.setCustomValidity('Please, this field is required');
+        console.log('invalid');
+    }
+
     return (
     <article className={styles.post}>
 
@@ -10,40 +64,39 @@ export function Post() {
         <header className={styles.header}>
             <div className={styles.author}>
                 {/* Nao preciso definir o valor de hasBorder no Avatar abaixo pois ja defini como default = true nas propriedades deste componente em Avatar.jsx */}
-                <Avatar src='https://xesque.rocketseat.dev/users/avatar/profile-7ff61704-175b-4ab6-8cc1-1df0bc8619ca.jpg'/>
+                <Avatar src={props.author.avatarUrl}/>
                 <div className={styles.authorInfo}>
-                    <strong>Wagner Filgueiras</strong>
-                    <span>Web Developer</span>
+                    <strong>{props.author.name}</strong>
+                    <span>{props.author.role}</span>
                  </div>
             </div>
                 
-                <time title="Oct, 25th 2023 at 15:30pm"dateTime="2023-25-10 15:30:15">Published 1h ago</time>
+                <time title={publishedDateFormatted} dateTime={props.publishedAt.toISOString()}>
+                    {publishedDateRelativeToNow}
+                </time>
         </header>
 {/* This is the Content area  of the Post */}
+{/* A key deve ir no primeiro elemento de retorno dentro de um map no caso abaixo dentro do <p> */}
         <div className={styles.content}>
-            <p>Hey guys! This is my new project for my portfolio. This is a project that I am using React.</p>
-
-            <p>I started this project on Oct 2023</p>
-
-            <p>Check the project below:</p>
-
-            <p><a href='#'>wagnerdesignlab.com</a></p>
-
-            <p>Designed by Wagner Filgueiras</p>
-
-            <p>
-                <a href=''>#newProject</a>{' '} 
-                <a href=''>#React</a>{' '}  
-                <a href=''>#WebDevelopment</a>
-            </p>
-
+           {props.content.map(line => {
+            if (line.type === 'paragraph'){
+                return <p key={line.content}>{line.content}</p>;
+            } else if (line.type === 'link') {
+                return <p key={line.content}><a href="#">{line.content}</a></p>;
+            }
+           })}
         </div>
 
-        <form className={styles.commentForm}>
+        <form onSubmit={handleCreateNewComment} className={styles.commentForm}>
             <strong>Leave your feedback</strong>
 
             <textarea
-                placeholder='Leave your comment here' 
+                name='input'
+                placeholder='Leave your comment here'
+                value={newCommentText}
+                onChange={handleNewCommentChange}
+                onInvalid={handleNewCommentInvalid}
+                required={true}
             />
             <footer>
                 <button>Comment</button>
@@ -51,9 +104,15 @@ export function Post() {
         </form>
 
         <div className={styles.commentList}>
-            <Comment />
-            <Comment />
-            <Comment />
+            {comments.map(comment => {
+                return (<Comment 
+                            key={comment} 
+                            content={comment} 
+                            // aqui estou enviando uma propriedade para que o componente comment se comunique com a funcao que criei aqui no post
+                            // pois aqui que sei qual o estado ou conteudo qq que seja que quero deletar
+                            onDeleteComment={deleteComment} 
+                        />)
+            })}
         </div>
 
 
